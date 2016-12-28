@@ -1,0 +1,1 @@
+The project is configured to put an executable into this folder ('Bin').

@@ -1,0 +1,1 @@
+The project is configured to put compiled units into this folder ('DCUs').
