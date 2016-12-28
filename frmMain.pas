@@ -7,6 +7,8 @@ uses
   Dialogs, ExtCtrls, Menus, dglOpenGL, PngImageList, pngimage;
 
 type
+  TVec3f = array [0..3] of Single;
+
   TMainForm = class(TForm)
     RenderTimer: TTimer;
     OpenGLPopup: TPopupMenu;
@@ -70,6 +72,7 @@ type
     LegAngle: Single;
     AnimationCircleAngle: Integer;
     Rotating: Boolean;
+    StepZ: Single;
   protected
     procedure DoAnimation;
     procedure DoRender;
@@ -806,6 +809,7 @@ begin
   LegAngle := ArmAngle;
   AnimationCircleAngle := 0;
   Rotating := True;
+  StepZ := 0;
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
@@ -857,6 +861,7 @@ end;
 procedure TMainForm.R_Prepare;
 const
   E_TEXTURE_LOAD = 'Unable to load a texture';
+  FOG_COLOR: TVec3f = (0.5, 0.5, 0.5, 1.0); 
 begin
   glClearColor(
     GetRValue(R_CLEARCOLOR) / 255,
@@ -868,19 +873,15 @@ begin
   glEnable(GL_DEPTH_TEST); // Р. теста глубины
   glEnable(GL_CULL_FACE);  // Р. отображения только передних поверхностей
 
+  glDepthFunc(GL_LESS);
+
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
 
   glEnable(GL_COLOR_MATERIAL);
   glEnable(GL_NORMALIZE);
 
-  glDepthFunc(GL_LESS);
-
   glEnable(GL_TEXTURE_2D);
-  //glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, Integer(GL_TRUE));
-
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   DoSceneResize;
 end;
@@ -894,10 +895,14 @@ procedure TMainForm.DoAnimation;
 const
   ANIM_STEP_ANGLE = 5; // Deg
 begin
+  // Camera Rotation //
+
   if CompareValue(AngleY, 360.0) = EqualsValue then
     AngleY := 0;
-  
+
   AngleY := AngleY + 0.5;
+
+  // Model //
 
   if CompareValue(AnimationCircleAngle, 360) = EqualsValue then
     AnimationCircleAngle := 0;
@@ -907,6 +912,13 @@ begin
 
   ArmAngle := ArmAngle * 0.80;
   LegAngle := ArmAngle;
+
+  // Terrain //
+
+  if CompareValue(StepZ, 2.00, 0.00001) = EqualsValue  then
+    StepZ := 0;
+
+  StepZ := StepZ + 0.05; 
 end;
 
 procedure TMainForm.DoOnIdle;
@@ -1264,7 +1276,7 @@ var
 begin
   glPushMatrix();
 
-    glTranslatef(0.0, -1.25, 0.0);
+    glTranslatef(0.0, -1.25, -StepZ * BLOCK_SIZE);
 
     glBindTexture(GL_TEXTURE_2D, TexBlockGrass[T_TOP]);
 
